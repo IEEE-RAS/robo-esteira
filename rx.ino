@@ -2,6 +2,7 @@
 // Projeto de comunicação sem fio Arduino
 // Fonte: http://blog.usinainfo.com.br/comunicacao-sem-fio-arduino-transferindo-dados-com-transmissor-receptor-rf-433mhz/
 // Download da biblioteca Virtual Wire: http://blog.usinainfo.com.br/wp-content/uploads/2018/02/VirtualWire.zip
+// Download biblioteca ArduinoJson.h: https://github.com/bblanchon/ArduinoJson
 
 #include <VirtualWire.h>          // Inclui biblioteca necessária para comunicação
 #define DATA_PIN 13
