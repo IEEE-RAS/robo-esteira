@@ -6,14 +6,12 @@
 #include <VirtualWire.h>          // Inclui biblioteca necessária para comunicação
 #define DATA_PIN 13
 #define TEMPO 750
+#include <ArduinoJson.h>        //biblioteca para protocolo de comunicação json
 
 
 //vetor com angulos
-int angulos [6] = {90, -90, 0, 45, -45, 30};
+int angulos [4] = {0, 0, 0, 0}; //x, y, z, p -> estado da garra (0 para aberto, 1 para fechado)
 char movimento;
-
-byte message[VW_MAX_MESSAGE_LEN];    // Variável para armazenagem de mensagens
-
 byte messageLength  = 80;    // Tamanho da mensagem
 
 void setup() {
@@ -28,49 +26,20 @@ void setup() {
   digitalWrite(DATA_PIN, LOW);
 }
 
-void loop() {
+void getMessage(byte message[]){
   clearBuffer(message, 80);
-
   if (vw_get_message(message, &messageLength)) {     // Elimina o bloqueio
-    //Serial.println(messageLength);
-    //Serial.print("Recebido: ");      // Imprime na porta serial a mensagem em destaque
     int i;
-    //for (i = 0; i < 80; i++) {
-      //Serial.write(message[i]);
-    //}
-
-    char convertida[messageLength];
-    convesorByteChar(message, messageLength, convertida);
-    atualizarVetor(convertida, messageLength);
-
-    //Serial.print("\nVetor: ");
-    //for (i = 0; i < 6; i++) {
-    //  Serial.print(angulos[i]);
-    //  Serial.print(" ; ");
-    //}
-   // Serial.println(movimento);
-    moverTudo(angulos);
-
+    char converted[messageLength];
+    convertByteChar(message, messageLength, converted);  
+    receivedJson(converted);
   }
 }
 
-int atualizarVetor(char *msg, int t) {
-  int i, j = 0, k = 0;
-  char v[4];
-
-  for (i = 0; i < t && msg[i] != '\0'; i++) { //percorre o vetor de mensagem
-    if (msg[i] == ',') { //verifica se acabou o numero
-      v[k] = '\0'; //delimita o fim da string temporaria
-      angulos[j] = atoi(v); //converte de string para numero
-      j++; //muda a posicao do vetor angulo
-      k = 0;   //zera a string temporaria
-    } else { //acomula os digitos do numero
-      v[k] = msg[i];
-      k++;
-    }
-
-  }
-  movimento = msg[i - 1];
+void loop() {
+  byte message[VW_MAX_MESSAGE_LEN];    // Variável para armazenagem de mensagens
+  getMessage(message);
+  moveAll(); 
 }
 
 void clearBuffer(byte *v, int t) {
@@ -84,7 +53,7 @@ void clearBuffer(byte *v, int t) {
 
 
 //Função para enviar comando apenas para um motor.
-void moverUmMotor (int servo, int pos, int Time) {
+void moveOne (int servo, int pos, int Time) {
   Serial.print("#");
   Serial.print(servo);
   Serial.print(" P");
@@ -94,14 +63,14 @@ void moverUmMotor (int servo, int pos, int Time) {
   delay(Time);
 }
 
-//Função para enviar comando para todos os seis motores.
-void moverTudo (int angulos []) {
+//Função para enviar comando para todos os motores.
+void moveAll () {
   int i;
-  for (i = 0; i < 6; i++) {
+  for (i = 0; i < 4; i++) {
     Serial.print("#");
     Serial.print(i);
     Serial.print(" P");
-    Serial.print(conversorGraus (angulos[i]));
+    Serial.print(convertDegrees (angulos[i]));
     Serial.print(" ");
   }
   Serial.print("T");
@@ -110,13 +79,23 @@ void moverTudo (int angulos []) {
 
 
 //Função que converte graus para ms.
-int conversorGraus (int graus) {
+int convertDegrees (int graus) {
   return map(graus, -90, 90, 500, 1500);
 }
 
-void convesorByteChar(byte a[], int t, char b[]) {
+void convertByteChar(byte a[], int t, char *b) {
   int i;
   for (i = 0; i < t; i++) {
     b[i] = (char)a[i];
   }
+}
+
+void receivedJson(char *message) {
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(message);
+  Serial.println(message);
+  angulos[0] = root["x"];
+  angulos[1] = root["y"];
+  angulos[2] = root["z"];
+  angulos[3] = root["p"]; 
 }
