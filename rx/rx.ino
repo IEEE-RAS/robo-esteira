@@ -5,7 +5,7 @@
 // Download biblioteca ArduinoJson.h: https://github.com/bblanchon/ArduinoJson
 
 #include <VirtualWire.h>          // Inclui biblioteca necessária para comunicação
-#define DATA_PIN 13
+#define DATA_PIN 11
 #define TEMPO 750
 #include <ArduinoJson.h>        //biblioteca para protocolo de comunicação json
 
@@ -21,10 +21,18 @@ void setup() {
 
   Serial.println("Dispositivo pronto para receber dados!"); //Imprime na Porta Serial
 
-  vw_set_rx_pin(11);         // Configura o pino Digital utilizado pelo Módulo Receptor
+  vw_set_rx_pin(DATA_PIN);         // Configura o pino Digital utilizado pelo Módulo Receptor
   vw_setup(2000);            // Bits por segundo
   vw_rx_start();             // Inicializa o receptor
   digitalWrite(DATA_PIN, LOW);
+
+  pinMode(12, OUTPUT); // VCC para recptor de radio
+  digitalWrite(12, HIGH);
+
+  pinMode(10, INPUT); // Necessario para o radio funcionar nesta conexão.
+  
+  pinMode(9, OUTPUT); //GND para receptor de radio
+  digitalWrite(9, LOW);
 }
 
 void getMessage(byte message[]){
@@ -32,7 +40,7 @@ void getMessage(byte message[]){
   if (vw_get_message(message, &messageLength)) {     // Elimina o bloqueio
     int i;
     char converted[messageLength];
-    convertByteChar(message, messageLength, converted);  
+    convertByteChar(message, messageLength, converted);
     receivedJson(converted);
   }
 }
