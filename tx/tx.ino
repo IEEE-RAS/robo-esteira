@@ -104,5 +104,5 @@ void sendJson(double x, double y, double z, double p) {
 
 //    sprintf(json, "{\"x\":%f,\"y\":%f,\"z\":%f, \"p\":%f, \"timer\":%d}", f, y, z, p, micros());
     Serial.println(json);
-//    send(json);
+    send(json); //Envia via radio
 }
